@@ -11,7 +11,10 @@ jobs:
           node-version: 20
       - name: Download source Bible database
         shell: bash
-        run: curl -sL -o db/source-bible.db "https://raw.githubusercontent.com/scrollmapper/bible_databases/2024/bible-sqlite.db"
+        run: |
+          mkdir -p db
+          curl -sfL -o db/source-bible.db "https://raw.githubusercontent.com/scrollmapper/bible_databases/2024/bible-sqlite.db"
+          ls -la db/
       - run: npm install
       - run: npm run build-db
       - run: npx electron-builder --win --publish=never
