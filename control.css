@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<title>Scripture Remote</title>
+<link rel="stylesheet" href="remote.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-top">
+        <span class="brand">SCRIPTURE REMOTE</span>
+        <span id="connDot" class="conn-dot"></span>
+      </div>
+      <div id="liveBanner" class="live-banner hidden">
+        <span class="live-banner-label">LIVE</span>
+        <span id="liveBannerText"></span>
+      </div>
+    </header>
+
+    <div class="search-bar">
+      <input id="searchInput" type="text" placeholder="Reference or phrase..." autocomplete="off" />
+      <button id="micBtn" class="mic-btn">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.93V21h2v-2.07A7 7 0 0 0 19 12h-2Z"/></svg>
+      </button>
+    </div>
+    <div id="micStatus" class="mic-status"></div>
+
+    <div class="version-row">
+      <select id="versionSelect"></select>
+      <label class="checkbox-label">
+        <input type="checkbox" id="multiVersionToggle" />
+        All versions
+      </label>
+    </div>
+
+    <div id="resultsMeta" class="results-meta"></div>
+    <div id="results" class="results"></div>
+
+    <button id="scheduleToggle" class="schedule-toggle">
+      Schedule (<span id="scheduleCount">0</span>) &#9650;
+    </button>
+  </div>
+
+  <div id="scheduleSheet" class="schedule-sheet">
+    <div class="schedule-sheet-header">
+      <span>SCHEDULE</span>
+      <button id="scheduleClose" class="sheet-close">&#9660;</button>
+    </div>
+    <div id="scheduleList" class="schedule-list"></div>
+  </div>
+
+  <script src="remote.js"></script>
+</body>
+</html>
