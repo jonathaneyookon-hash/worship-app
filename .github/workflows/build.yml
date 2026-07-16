@@ -17,7 +17,21 @@ jobs:
           ls -la db/
       - run: npm install
       - run: npm run build-db
+      - name: Verify database was built
+        shell: bash
+        run: |
+          echo "--- db/ after build-db ---"
+          ls -la db/
+          if [ ! -f db/bible.db ]; then
+            echo "::error::bible.db was NOT created by build-db.js"
+            exit 1
+          fi
       - run: npx electron-builder --win --publish=never
+      - name: Verify database was packaged
+        shell: bash
+        run: |
+          echo "--- packaged app db/ contents ---"
+          ls -la "release/win-unpacked/resources/app/db/" || echo "db folder missing from packaged app!"
       - uses: actions/upload-artifact@v4
         with:
           name: scripture-presenter-installer
