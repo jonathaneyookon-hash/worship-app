@@ -161,6 +161,12 @@ right, not just a clicker.
   desktop updates instantly (and vice versa), over a WebSocket connection.
 - A **live status banner** at the top shows what's currently on the projector.
 
+**Install it as an app (no app store needed):** the Remote is a Progressive Web App —
+after opening the URL, use your browser's "Add to Home Screen" option (Chrome on Android:
+menu → "Install app" / "Add to Home Screen"; Safari on iOS: Share button → "Add to Home
+Screen"). It'll appear as a real app icon and open full-screen with no browser bar,
+without needing the Play Store, App Store, or any build pipeline.
+
 **Architecture note, if you're extending this later:** `state.js` is the single source of
 truth for schedule/preview/live, shared by both the Electron control window (via IPC) and
 the Remote (via the same server's REST/WebSocket API in `server/index.js`). Any new

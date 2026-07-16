@@ -11,6 +11,7 @@ let remoteInfo = null; // { url, qrDataUrl } — filled in once the server start
 
 let controlWindow = null;
 let liveWindow = null;
+let currentTheme = null; // persisted so it re-applies whenever the Live window (re)opens
 
 // Lazily require search.js so a missing bible.db doesn't crash app startup;
 // we show a friendly "run the import script" message in the UI instead.
@@ -78,6 +79,10 @@ function createLiveWindow() {
     },
   });
   liveWindow.loadFile(path.join(__dirname, 'src/live/index.html'));
+  liveWindow.webContents.once('did-finish-load', () => {
+    if (currentTheme) liveWindow.webContents.send('live:theme', currentTheme);
+    if (state.live) liveWindow.webContents.send('live:update', state.live);
+  });
   liveWindow.on('closed', () => { liveWindow = null; });
 }
 
@@ -157,6 +162,14 @@ ipcMain.handle('search:versions', () => {
   return engine.listVersions();
 });
 
+ipcMain.handle('search:books', () => {
+  try {
+    return require('./db/books').map(([abbrev, name]) => name);
+  } catch (e) {
+    return [];
+  }
+});
+
 ipcMain.handle('diagnostics:db-error', () => dbLoadError);
 
 // ---- IPC: shared state (schedule / preview / live) ----
@@ -175,7 +188,12 @@ ipcMain.on('live:open', () => {
 });
 
 ipcMain.on('live:set-theme', (event, theme) => {
-  if (liveWindow) liveWindow.webContents.send('live:theme', theme);
+  currentTheme = theme;
+  if (!liveWindow) {
+    createLiveWindow();
+    return; // did-finish-load handler above will apply currentTheme once ready
+  }
+  liveWindow.webContents.send('live:theme', theme);
 });
 
 // ---- IPC: background image ----
