@@ -16,6 +16,12 @@ jobs:
           curl -sfL -o db/source-bible.db "https://raw.githubusercontent.com/scrollmapper/bible_databases/2024/bible-sqlite.db"
           ls -la db/
       - run: npm install
+      - name: Attempt to install NDI support (optional, isolated from the rest of the build)
+        shell: bash
+        continue-on-error: true
+        run: |
+          npm install grandiose@github:rse/grandiose --no-save --no-package-lock
+          node -e "try { require('grandiose'); console.log('NDI module loaded successfully at build time'); } catch(e) { console.log('NDI module NOT available:', e.message); }"
       - run: npm run build-db
       - name: Verify database was built
         shell: bash
@@ -32,6 +38,15 @@ jobs:
         run: |
           echo "--- packaged app db/ contents ---"
           ls -la "release/win-unpacked/resources/app/db/" || echo "db folder missing from packaged app!"
+      - name: Check whether NDI made it into the packaged app
+        shell: bash
+        continue-on-error: true
+        run: |
+          if [ -d "release/win-unpacked/resources/app/node_modules/grandiose" ]; then
+            echo "NDI (grandiose) IS included in the packaged app."
+          else
+            echo "NDI (grandiose) did NOT make it into the packaged app — app will run fine, just without NDI."
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: scripture-presenter-installer
