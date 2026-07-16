@@ -38,10 +38,11 @@ async function loadVersions() {
   versionSelect.innerHTML = '';
   if (versions.length === 0) {
     versionSelect.innerHTML = '<option>No database found</option>';
+    const dbError = await window.scriptureAPI.getDbError();
     resultsEl.innerHTML = `<div class="empty-state">
-      No Bible database found. From the project folder, run:<br><br>
-      <code>npm run build-db</code><br><br>
-      Then restart the app.
+      Bible database failed to load.<br><br>
+      <strong>Error:</strong> ${dbError || '(no error captured — try running "npm run build-db" then restart)'}<br><br>
+      Please screenshot this and send it back.
     </div>`;
     return;
   }
