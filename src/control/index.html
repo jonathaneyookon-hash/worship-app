@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Scripture Presenter</title>
+<link rel="stylesheet" href="control.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- Top toolbar -->
+    <header class="toolbar">
+      <div class="brand">
+        <span class="brand-mark">&#9776;</span>
+        <span class="brand-name">SCRIPTURE PRESENTER</span>
+      </div>
+      <div class="toolbar-actions">
+        <button id="remoteBtn" class="btn btn-ghost">Remote</button>
+        <button id="ndiBtn" class="btn btn-ghost" title="Send Live output over NDI">NDI: Off</button>
+        <button id="openLiveBtn" class="btn btn-ghost">Open Live Display</button>
+        <button id="blackBtn" class="btn btn-ghost">Black</button>
+        <button id="clearLiveBtn" class="btn btn-ghost">Clear</button>
+      </div>
+    </header>
+
+    <!-- Remote connection popover -->
+    <div id="remotePanel" class="remote-panel">
+      <div class="remote-panel-title">Scripture Remote</div>
+      <div class="remote-panel-desc">Open this address on a phone/tablet on the same WiFi network to search and control this app remotely.</div>
+      <div id="remoteUrlText" class="remote-url">Loading…</div>
+      <img id="remoteQrImg" class="remote-qr" style="display:none" alt="QR code to open Remote" />
+    </div>
+
+    <!-- Preview + Live, side by side, like EasyWorship's "Preview and Live" view -->
+    <section class="pv-live-row">
+      <div class="pane preview-pane">
+        <div class="pane-label">PREVIEW</div>
+        <div class="pane-frame" id="previewFrame">
+          <div class="pane-text" id="previewText">Nothing selected</div>
+          <div class="pane-ref" id="previewRef"></div>
+        </div>
+        <div class="pane-actions">
+          <button id="goLiveBtn" class="btn btn-primary" disabled>Go Live &#9654;</button>
+        </div>
+      </div>
+      <div class="pane live-pane">
+        <div class="pane-label">LIVE <span id="liveDot" class="live-dot"></span></div>
+        <div class="pane-frame" id="liveFrame">
+          <div class="pane-text" id="liveText"></div>
+          <div class="pane-ref" id="liveRef"></div>
+        </div>
+        <div class="pane-actions theme-row">
+          <span class="theme-label">Background</span>
+          <button class="swatch" data-bg="#000000" style="background:#000"></button>
+          <button class="swatch" data-bg="#0b0f1a" style="background:#0b0f1a"></button>
+          <button class="swatch" data-bg="#1a1206" style="background:#1a1206"></button>
+          <button class="swatch" data-bg="#0d1a12" style="background:#0d1a12"></button>
+          <button id="imageThemeBtn" class="btn btn-ghost btn-small">Image…</button>
+          <span id="imageThemeName" class="image-theme-name"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Resource Area: tabbed library (bottom, collapsible, like EasyWorship) -->
+    <section class="resource-area" id="resourceArea">
+      <div class="resource-tabs">
+        <button class="res-tab active" data-tab="scriptures">Scriptures</button>
+        <button class="res-tab" data-tab="songs" disabled title="Coming soon">Songs</button>
+        <button class="res-tab" data-tab="media" disabled title="Coming soon">Media</button>
+        <button class="res-tab" data-tab="presentations" disabled title="Coming soon">Presentations</button>
+        <button class="res-tab" data-tab="themes" disabled title="Coming soon">Themes</button>
+        <button id="collapseBtn" class="collapse-btn" title="Collapse Resource Area">&#9650;</button>
+      </div>
+
+      <div class="resource-body">
+        <!-- Column 1: search + version -->
+        <div class="res-col res-search-col">
+          <div class="search-row">
+            <input id="searchInput" type="text" placeholder="Reference (John 3:16) or phrase..." autocomplete="off" />
+            <button id="micBtn" class="mic-btn" title="Voice search">
+              <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.93V21h2v-2.07A7 7 0 0 0 19 12h-2Z"/></svg>
+            </button>
+          </div>
+          <div id="micStatus" class="mic-status"></div>
+          <div class="version-row">
+            <label for="versionSelect">Version</label>
+            <select id="versionSelect"></select>
+          </div>
+          <label class="checkbox-label">
+            <input type="checkbox" id="multiVersionToggle" />
+            All versions side-by-side
+          </label>
+        </div>
+
+        <!-- Column 2: results library -->
+        <div class="res-col res-library-col">
+          <div id="resultsMeta" class="results-meta"></div>
+          <div id="results" class="results"></div>
+        </div>
+
+        <!-- Column 3: schedule (set list) -->
+        <div class="res-col res-schedule-col">
+          <div class="schedule-header">SCHEDULE</div>
+          <div id="scheduleList" class="schedule-list">
+            <div class="schedule-empty">Add verses here to build your service order.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="control.js"></script>
+</body>
+</html>
