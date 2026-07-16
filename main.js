@@ -15,11 +15,13 @@ let liveWindow = null;
 // Lazily require search.js so a missing bible.db doesn't crash app startup;
 // we show a friendly "run the import script" message in the UI instead.
 let searchEngine = null;
+let dbLoadError = null;
 function getSearchEngine() {
   if (!searchEngine) {
     try {
       searchEngine = require('./db/search');
     } catch (e) {
+      dbLoadError = e.message;
       console.error('Bible database not found. Run: node db/build-db.js', e);
     }
   }
@@ -48,6 +50,7 @@ function createControlWindow() {
     },
   });
   controlWindow.loadFile(path.join(__dirname, 'src/control/index.html'));
+  controlWindow.webContents.openDevTools({ mode: 'detach' });
   controlWindow.on('closed', () => {
     controlWindow = null;
     if (liveWindow) liveWindow.close();
@@ -153,6 +156,8 @@ ipcMain.handle('search:versions', () => {
   if (!engine) return [];
   return engine.listVersions();
 });
+
+ipcMain.handle('diagnostics:db-error', () => dbLoadError);
 
 // ---- IPC: shared state (schedule / preview / live) ----
 ipcMain.handle('state:get', () => state.snapshot());

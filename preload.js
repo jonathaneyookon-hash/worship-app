@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('scriptureAPI', {
   search: (query, version) => ipcRenderer.invoke('search:query', { query, version }),
   searchAllVersions: (query) => ipcRenderer.invoke('search:reference-all-versions', { query }),
   listVersions: () => ipcRenderer.invoke('search:versions'),
+  getDbError: () => ipcRenderer.invoke('diagnostics:db-error'),
 
   // Shared state (schedule / preview / live) — same state a phone Remote uses
   getState: () => ipcRenderer.invoke('state:get'),
