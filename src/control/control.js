@@ -1,4 +1,5 @@
 const searchInput = document.getElementById('searchInput');
+const bookSuggestionsEl = document.getElementById('bookSuggestions');
 const micBtn = document.getElementById('micBtn');
 const micStatus = document.getElementById('micStatus');
 const versionSelect = document.getElementById('versionSelect');
@@ -31,6 +32,9 @@ const remoteQrImg = document.getElementById('remoteQrImg');
 let currentVersion = 'kjv';
 let activeCardEl = null;
 let latestPreviewItem = null; // used to know what "Go Live" should push
+let booksList = [];
+let suggestions = [];
+let highlightedIndex = -1;
 
 // ---- Load available versions ----
 async function loadVersions() {
@@ -283,19 +287,128 @@ remoteBtn.addEventListener('click', async () => {
 });
 
 // ---- Search ----
-async function runSearch() {
+async function runSearch(opts = {}) {
   const query = searchInput.value.trim();
   if (!query) return;
   if (multiVersionToggle.checked) {
     renderMultiVersionResults(await window.scriptureAPI.searchAllVersions(query));
-  } else {
-    renderSingleVersionResults(await window.scriptureAPI.search(query, currentVersion));
+    return;
+  }
+  const payload = await window.scriptureAPI.search(query, currentVersion);
+  renderSingleVersionResults(payload);
+
+  // Enter on a single, unambiguous verse reference (e.g. "John 3:16") jumps
+  // straight to Live — same fast path EasyWorship uses. Whole-chapter results
+  // or phrase-search matches still just populate the list, since there's no
+  // single obvious verse to commit to.
+  if (opts.autoLive && payload.type === 'reference' && payload.results.length === 1) {
+    const row = payload.results[0];
+    const item = { reference: `${row.book_name} ${row.chapter}:${row.verse}`, text: cleanText(row.text), version: row.version || currentVersion };
+    loadIntoPreview(item);
+    window.scriptureAPI.goLive(item);
   }
 }
-searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') runSearch(); });
+// ---- Book autocomplete (EasyWorship-style: type "i" -> Isaiah suggested,
+// space accepts it and moves on to typing chapter/verse) ----
+async function loadBooks() {
+  booksList = await window.scriptureAPI.listBooks();
+}
+loadBooks();
+
+function updateSuggestions() {
+  const raw = searchInput.value;
+  // Only offer book suggestions while no digit has been typed yet — once a
+  // chapter number appears, the book portion is considered locked in.
+  if (!raw || /\d/.test(raw)) {
+    closeSuggestions();
+    return;
+  }
+  const query = raw.trim().toLowerCase();
+  if (!query) {
+    closeSuggestions();
+    return;
+  }
+  suggestions = booksList
+    .filter((name) => {
+      const lower = name.toLowerCase();
+      return lower.startsWith(query) || lower.split(' ').some((word) => word.startsWith(query));
+    })
+    .slice(0, 8);
+
+  if (suggestions.length === 0) {
+    closeSuggestions();
+    return;
+  }
+  highlightedIndex = 0;
+  renderSuggestions();
+}
+
+function renderSuggestions() {
+  bookSuggestionsEl.innerHTML = '';
+  suggestions.forEach((name, idx) => {
+    const el = document.createElement('div');
+    el.className = 'book-suggestion' + (idx === highlightedIndex ? ' highlighted' : '');
+    el.textContent = name;
+    el.addEventListener('mousedown', (e) => {
+      e.preventDefault(); // keep focus in the input
+      selectSuggestion(name);
+    });
+    bookSuggestionsEl.appendChild(el);
+  });
+  bookSuggestionsEl.classList.add('open');
+}
+
+function closeSuggestions() {
+  suggestions = [];
+  highlightedIndex = -1;
+  bookSuggestionsEl.classList.remove('open');
+  bookSuggestionsEl.innerHTML = '';
+}
+
+function selectSuggestion(name) {
+  searchInput.value = name + ' ';
+  closeSuggestions();
+  searchInput.focus();
+}
+
 searchInput.addEventListener('input', () => {
+  updateSuggestions();
   clearTimeout(searchInput._debounce);
-  searchInput._debounce = setTimeout(runSearch, 350);
+  searchInput._debounce = setTimeout(() => runSearch({ autoLive: false }), 350);
+});
+
+searchInput.addEventListener('keydown', (e) => {
+  if (bookSuggestionsEl.classList.contains('open')) {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      highlightedIndex = Math.min(highlightedIndex + 1, suggestions.length - 1);
+      renderSuggestions();
+      return;
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      highlightedIndex = Math.max(highlightedIndex - 1, 0);
+      renderSuggestions();
+      return;
+    }
+    if (e.key === ' ' || e.key === 'Enter') {
+      if (highlightedIndex >= 0) {
+        e.preventDefault();
+        selectSuggestion(suggestions[highlightedIndex]);
+        return;
+      }
+    }
+    if (e.key === 'Escape') {
+      closeSuggestions();
+      return;
+    }
+  }
+  if (e.key === 'Enter') runSearch({ autoLive: true });
+});
+
+searchInput.addEventListener('blur', () => {
+  // small delay so a suggestion click's mousedown still registers first
+  setTimeout(closeSuggestions, 150);
 });
 
 // ---- Voice search ----

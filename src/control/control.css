@@ -239,6 +239,29 @@ html, body {
 }
 .mic-status { min-height: 16px; font-size: 11px; color: var(--gold-soft); margin-top: 5px; }
 
+.book-suggestions {
+  position: relative;
+  display: none;
+  flex-direction: column;
+  background: var(--panel-3);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  overflow: hidden;
+  margin-top: -1px;
+}
+.book-suggestions.open { display: flex; }
+.book-suggestion {
+  padding: 8px 12px;
+  font-size: 12.5px;
+  cursor: pointer;
+  color: var(--text);
+}
+.book-suggestion:hover, .book-suggestion.highlighted {
+  background: var(--gold);
+  color: #1a1408;
+}
+
 .version-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 12px; color: var(--text-muted); }
 .version-row select {
   flex: 1;
