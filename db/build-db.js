@@ -1,140 +1,93 @@
+// Builds bible.db (SQLite) by importing from source-bible.db — a bundled,
+// pre-built public-domain multi-version dataset (ASV, BBE, KJV, WEB, YLT)
+// sourced from the scrollmapper/bible_databases project (2024 branch, GPLv3,
+// all included translations public domain). See README for details/credit.
+//
+// Run with: node build-db.js
+// Produces: verses table + FTS5 virtual table `verses_fts` for phrase search.
+
+const fs = require('fs');
 const path = require('path');
 const Database = require('better-sqlite3');
 const BOOKS = require('./books');
 
-let db = null;
-function getDb() {
-  if (!db) {
-    db = new Database(path.join(__dirname, 'bible.db'), { readonly: true, fileMustExist: true });
-  }
-  return db;
+const SOURCE_DB = path.join(__dirname, 'source-bible.db');
+
+// table name in source DB -> { code, name } for our app
+const VERSIONS = [
+  { table: 't_kjv', code: 'kjv', name: 'King James Version' },
+  { table: 't_asv', code: 'asv', name: 'American Standard Version' },
+  { table: 't_bbe', code: 'bbe', name: 'Bible in Basic English' },
+  { table: 't_web', code: 'web', name: 'World English Bible' },
+  { table: 't_ylt', code: 'ylt', name: "Young's Literal Translation" },
+];
+
+if (!fs.existsSync(SOURCE_DB)) {
+  console.error(`Missing ${SOURCE_DB}. This file should be bundled in db/. See README.`);
+  process.exit(1);
 }
 
-// Build a lookup of every alias -> book_id, longest aliases first so
-// "1 john" matches before "john".
-const ALIAS_TO_BOOK = [];
-BOOKS.forEach(([abbrev, name, ...aliases], idx) => {
-  const bookId = idx + 1;
-  [name, abbrev, ...aliases].forEach((alias) => {
-    ALIAS_TO_BOOK.push({ alias: alias.toLowerCase(), bookId, name });
-  });
+const DB_PATH = path.join(__dirname, 'bible.db');
+if (fs.existsSync(DB_PATH)) fs.unlinkSync(DB_PATH);
+const db = new Database(DB_PATH);
+db.exec(`ATTACH DATABASE '${SOURCE_DB.replace(/'/g, "''")}' AS src`);
+
+db.exec(`
+  CREATE TABLE versions (code TEXT PRIMARY KEY, name TEXT);
+  CREATE TABLE books (id INTEGER PRIMARY KEY, abbrev TEXT, name TEXT, book_order INTEGER);
+  CREATE TABLE verses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    version TEXT,
+    book_id INTEGER,
+    book_name TEXT,
+    chapter INTEGER,
+    verse INTEGER,
+    text TEXT
+  );
+  CREATE INDEX idx_verses_lookup ON verses(version, book_id, chapter, verse);
+  CREATE VIRTUAL TABLE verses_fts USING fts5(text, content='verses', content_rowid='id');
+`);
+
+const insVersion = db.prepare('INSERT INTO versions (code, name) VALUES (?, ?)');
+const insBook = db.prepare('INSERT INTO books (id, abbrev, name, book_order) VALUES (?, ?, ?, ?)');
+const insVerse = db.prepare(`INSERT INTO verses (version, book_id, book_name, chapter, verse, text)
+                              VALUES (@version, @book_id, @book_name, @chapter, @verse, @text)`);
+const insFts = db.prepare('INSERT INTO verses_fts (rowid, text) VALUES (?, ?)');
+
+BOOKS.forEach(([abbrev, name], idx) => {
+  insBook.run(idx + 1, abbrev, name, idx + 1);
 });
-ALIAS_TO_BOOK.sort((a, b) => b.alias.length - a.alias.length);
 
-/**
- * Attempts to parse a raw string (typed or voice-transcribed) as a scripture
- * reference, e.g. "John 3:16", "john chapter 3 verse 16", "genesis 1 1-5",
- * "1 corinthians 13:4-7".
- * Returns { bookId, bookName, chapter, verseStart, verseEnd } or null.
- */
-function parseReference(raw) {
-  if (!raw) return null;
-  let text = raw.toLowerCase().trim()
-    .replace(/chapter/g, ' ')
-    .replace(/verses?/g, ' ')
-    .replace(/[.,]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+let totalVerses = 0;
 
-  // find which book this starts with
-  const match = ALIAS_TO_BOOK.find((b) => text.startsWith(b.alias + ' ') || text === b.alias);
-  if (!match) return null;
+for (const v of VERSIONS) {
+  console.log(`Importing ${v.name} (${v.code})...`);
+  insVersion.run(v.code, v.name);
 
-  const rest = text.slice(match.alias.length).trim();
-  if (!rest) return { bookId: match.bookId, bookName: match.name, chapter: 1, verseStart: null, verseEnd: null };
+  // source uses standard book numbers 1-66 matching our BOOKS order
+  const rows = db.prepare(`SELECT b, c, v as verse, t as text FROM src.${v.table} ORDER BY id`).all();
 
-  // Patterns: "3:16", "3 16", "3:16-18", "3 16 18", "3"
-  const refMatch = rest.match(/^(\d+)[\s:]*(\d+)?(?:\s*[-to]+\s*(\d+))?/);
-  if (!refMatch) return { bookId: match.bookId, bookName: match.name, chapter: 1, verseStart: null, verseEnd: null };
+  const insertMany = db.transaction((allRows) => {
+    for (const row of allRows) {
+      const bookIdx = row.b - 1;
+      if (bookIdx < 0 || bookIdx >= BOOKS.length) continue; // skip deuterocanonical etc.
+      const bookName = BOOKS[bookIdx][1];
+      const info = insVerse.run({
+        version: v.code,
+        book_id: row.b,
+        book_name: bookName,
+        chapter: row.c,
+        verse: row.verse,
+        text: row.text,
+      });
+      insFts.run(info.lastInsertRowid, row.text);
+      totalVerses++;
+    }
+  });
 
-  const chapter = parseInt(refMatch[1], 10);
-  const verseStart = refMatch[2] ? parseInt(refMatch[2], 10) : null;
-  const verseEnd = refMatch[3] ? parseInt(refMatch[3], 10) : verseStart;
-
-  return { bookId: match.bookId, bookName: match.name, chapter, verseStart, verseEnd };
+  insertMany(rows);
 }
 
-/** Fetch verse(s) for a parsed reference in a given version. */
-function getByReference(ref, version) {
-  const database = getDb();
-  if (ref.verseStart) {
-    const rows = database.prepare(`
-      SELECT book_name, chapter, verse, text FROM verses
-      WHERE version = ? AND book_id = ? AND chapter = ? AND verse BETWEEN ? AND ?
-      ORDER BY verse
-    `).all(version, ref.bookId, ref.chapter, ref.verseStart, ref.verseEnd);
-    return rows;
-  }
-  // whole chapter
-  const rows = database.prepare(`
-    SELECT book_name, chapter, verse, text FROM verses
-    WHERE version = ? AND book_id = ? AND chapter = ?
-    ORDER BY verse
-  `).all(version, ref.bookId, ref.chapter);
-  return rows;
-}
-
-/** Fetch the same reference across ALL installed versions (for multi-version display). */
-function getByReferenceAllVersions(ref) {
-  const database = getDb();
-  const versions = database.prepare('SELECT code, name FROM versions').all();
-  return versions.map((v) => ({
-    version: v.code,
-    versionName: v.name,
-    verses: getByReference(ref, v.code),
-  }));
-}
-
-/**
- * Free-text / phrase search, e.g. "and the darkness comprehended it not".
- * Uses SQLite FTS5. Falls back gracefully on odd input by quoting each word.
- */
-function phraseSearch(query, version, limit = 20) {
-  const database = getDb();
-  const cleaned = query.trim().replace(/[^\w\s']/g, ' ').trim();
-  if (!cleaned) return [];
-
-  // Try as an exact phrase first, then fall back to an AND of all terms.
-  const phraseQuery = `"${cleaned.replace(/"/g, '')}"`;
-  const words = cleaned.split(/\s+/).filter(Boolean);
-  const andQuery = words.map((w) => `"${w}"`).join(' AND ');
-
-  const runQuery = (ftsQuery) => database.prepare(`
-    SELECT v.book_name, v.chapter, v.verse, v.text, v.version
-    FROM verses_fts f
-    JOIN verses v ON v.id = f.rowid
-    WHERE verses_fts MATCH ? AND v.version = ?
-    ORDER BY rank
-    LIMIT ?
-  `).all(ftsQuery, version, limit);
-
-  let results = [];
-  try {
-    results = runQuery(phraseQuery);
-  } catch (e) { /* fall through */ }
-
-  if (results.length === 0 && words.length > 1) {
-    try {
-      results = runQuery(andQuery);
-    } catch (e) { /* fall through */ }
-  }
-  return results;
-}
-
-function listVersions() {
-  return getDb().prepare('SELECT code, name FROM versions').all();
-}
-
-/**
- * Main entry point used by the app: given raw voice/typed input, decide
- * whether it's a direct reference or a phrase search, and return results.
- */
-function search(rawInput, version) {
-  const ref = parseReference(rawInput);
-  if (ref) {
-    return { type: 'reference', reference: ref, results: getByReference(ref, version) };
-  }
-  return { type: 'phrase', results: phraseSearch(rawInput, version) };
-}
-
-module.exports = { parseReference, getByReference, getByReferenceAllVersions, phraseSearch, listVersions, search };
+console.log(`Done. Imported ${totalVerses} verses across ${VERSIONS.length} versions.`);
+console.log(`Database written to ${DB_PATH}`);
+db.close();
