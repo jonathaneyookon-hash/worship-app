@@ -1,20 +1,18 @@
-// state.js — single source of truth for schedule + preview + live state.
-// Both the Electron control window (via IPC) and the mobile Remote (via
-// HTTP/WebSocket) read and write through this same object, so a change made
-// from a phone instantly reflects on the desktop and vice versa.
-
+// Shared presentation state used by the desktop controller and mobile Remote.
 const { EventEmitter } = require('events');
 
 class AppState extends EventEmitter {
   constructor() {
     super();
-    this.schedule = []; // [{ id, reference, text, version }]
+    this.schedule = [];
     this.preview = null;
     this.live = null;
+    this.output = 'live'; // live | black | clear
     this._nextId = 1;
   }
 
   addToSchedule(item) {
+    if (!item || !item.reference || !item.text) return null;
     const entry = { id: this._nextId++, ...item };
     this.schedule.push(entry);
     this._emitChange();
@@ -22,39 +20,61 @@ class AppState extends EventEmitter {
   }
 
   removeFromSchedule(id) {
-    this.schedule = this.schedule.filter((i) => i.id !== id);
+    this.schedule = this.schedule.filter((i) => i.id !== Number(id));
     this._emitChange();
   }
 
   moveInSchedule(id, direction) {
-    const idx = this.schedule.findIndex((i) => i.id === id);
+    const idx = this.schedule.findIndex((i) => i.id === Number(id));
     if (idx === -1) return;
-    const newIdx = idx + direction;
+    const newIdx = idx + Number(direction);
     if (newIdx < 0 || newIdx >= this.schedule.length) return;
     [this.schedule[idx], this.schedule[newIdx]] = [this.schedule[newIdx], this.schedule[idx]];
     this._emitChange();
   }
 
   setPreview(item) {
-    this.preview = item;
+    this.preview = item || null;
     this._emitChange();
   }
 
   goLive(item) {
-    this.live = item || this.preview;
-    this.preview = this.live;
+    const next = item || this.preview;
+    if (!next) return;
+    this.live = next;
+    this.preview = next;
+    this.output = 'live';
     this._emitChange();
-    this.emit('live', this.live);
+    this.emit('display', this.snapshot());
+  }
+
+  blackout() {
+    this.output = 'black';
+    this._emitChange();
+    this.emit('display', this.snapshot());
   }
 
   clearLive() {
     this.live = null;
+    this.output = 'clear';
     this._emitChange();
-    this.emit('live', null);
+    this.emit('display', this.snapshot());
+  }
+
+  restoreLive() {
+    if (!this.live) return;
+    this.output = 'live';
+    this._emitChange();
+    this.emit('display', this.snapshot());
   }
 
   snapshot() {
-    return { schedule: this.schedule, preview: this.preview, live: this.live };
+    return {
+      schedule: this.schedule,
+      preview: this.preview,
+      live: this.live,
+      output: this.output,
+    };
   }
 
   _emitChange() {
@@ -62,6 +82,4 @@ class AppState extends EventEmitter {
   }
 }
 
-// Singleton — both main.js (IPC) and server/index.js (HTTP/WS) require this
-// same instance.
 module.exports = new AppState();
