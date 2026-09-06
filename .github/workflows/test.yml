@@ -1,0 +1,22 @@
+name: Validate JavaScript
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check JavaScript syntax
+        shell: bash
+        run: |
+          set -e
+          for f in main.js state.js preload.js server/index.js db/*.js src/control/*.js src/live/*.js src/stage/*.js; do
+            echo "Checking $f"
+            node --check "$f"
+          done
