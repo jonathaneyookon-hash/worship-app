@@ -7,4 +7,7 @@ if (blackButton) blackButton.addEventListener('click', () => window.scriptureAPI
 const translationSelect = document.getElementById('versionSelect');
 if (translationSelect && window.scriptureAPI.setVersion) {
   translationSelect.addEventListener('change', () => window.scriptureAPI.setVersion(translationSelect.value));
+  window.scriptureAPI.getState().then(snapshot => {
+    if (snapshot && snapshot.selectedVersion) translationSelect.value = snapshot.selectedVersion;
+  }).catch(() => {});
 }
