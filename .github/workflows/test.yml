@@ -1,17 +1,19 @@
-name: Validate JavaScript
+name: Validate JavaScript and Bible database
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
 jobs:
-  syntax:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Install dependencies
+        run: npm install
       - name: Check JavaScript syntax
         shell: bash
         run: |
@@ -20,3 +22,20 @@ jobs:
             echo "Checking $f"
             node --check "$f"
           done
+      - name: Download Bible packs
+        run: npm run install-bible-packs
+      - name: Build Bible database
+        run: npm run build-db
+      - name: Verify installed translations and search
+        run: |
+          node - <<'NODE'
+          const search = require('./db/search');
+          const versions = search.listVersions();
+          console.log(`Installed translations: ${versions.length}`);
+          if (versions.length < 10) throw new Error(`Expected at least 10 translations, found ${versions.length}`);
+          const reference = search.search('John 3:16', versions[0].code);
+          if (!reference.results.length) throw new Error('John 3:16 reference search returned no results');
+          const phrase = search.search('beginning was the Word', versions[0].code);
+          if (!phrase.results.length) throw new Error('Phrase search returned no results');
+          console.log('Bible search verification passed.');
+          NODE
