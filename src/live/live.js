@@ -1,47 +1,5 @@
-const stage = document.getElementById('stage');
-const verseText = document.getElementById('verseText');
-const verseRef = document.getElementById('verseRef');
-
-function renderDisplay(snapshot) {
-  if (!snapshot) return;
-  if (snapshot.output === 'black') {
-    stage.classList.add('blackout');
-    return;
-  }
-  stage.classList.remove('blackout');
-  if (snapshot.output === 'clear' || !snapshot.live) {
-    verseText.classList.remove('visible');
-    verseRef.classList.remove('visible');
-    verseText.textContent = '';
-    verseRef.textContent = '';
-    return;
-  }
-  const payload = snapshot.live;
-  verseText.textContent = payload.text || '';
-  verseRef.textContent = `${payload.reference || ''}  (${String(payload.version || '').toUpperCase()})`;
-  verseText.classList.add('visible');
-  verseRef.classList.add('visible');
-}
-
-window.scriptureAPI.onLiveDisplay(renderDisplay);
-window.scriptureAPI.onLiveUpdate((payload) => {
-  renderDisplay({ output: 'live', live: payload });
-});
-window.scriptureAPI.onLiveClear(() => renderDisplay({ output: 'clear', live: null }));
-
-window.scriptureAPI.onLiveTheme((theme) => {
-  if (!theme) return;
-  if (theme.type === 'image' && theme.url) {
-    stage.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.55)), url("${theme.url}")`;
-    stage.style.backgroundSize = 'cover';
-    stage.style.backgroundPosition = 'center';
-    stage.style.backgroundColor = '#000';
-  } else if (theme.background) {
-    stage.style.backgroundImage = 'none';
-    stage.style.background = theme.background;
-  }
-});
-
-window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') window.close();
-});
+const stage=document.getElementById('stage'),text=document.getElementById('verseText'),ref=document.getElementById('verseRef'),video=document.getElementById('mediaVideo'),image=document.getElementById('mediaImage'),content=document.getElementById('content'),clock=document.getElementById('clock');let transition='fade';
+function applyTheme(t){if(!t)return;if(t.type==='image'&&t.url){stage.style.backgroundImage=`linear-gradient(rgba(0,0,0,.38),rgba(0,0,0,.55)),url("${t.url}")`;stage.style.backgroundSize='cover';stage.style.backgroundPosition='center';}else{stage.style.backgroundImage='none';stage.style.background=t.background||'#000';}}
+function showContent(){content.classList.remove('out');void content.offsetWidth;content.classList.add(transition);}
+function render(s){if(!s)return;transition=s.transition||'fade';applyTheme(s.theme);stage.classList.toggle('blackout',s.output==='black');if(s.output==='black'){content.style.opacity='0';video.style.display='none';image.style.display='none';clock.style.display='none';return;}if(s.stageMode==='clock'){content.style.display='none';video.style.display='none';image.style.display='none';clock.style.display='block';clock.textContent=new Date().toLocaleTimeString();return;}clock.style.display='none';content.style.display='flex';const x=s.live;if(!x||s.output==='clear'){text.textContent='';ref.textContent='';video.style.display='none';image.style.display='none';content.style.opacity='0';return;}if(x.type==='media'&&x.url){content.style.opacity='0';if(/\.(mp4|webm|mov|mkv|avi)(\?|$)/i.test(x.url)){image.style.display='none';video.style.display='block';video.src=x.url;video.play().catch(()=>{});}else{video.pause();video.removeAttribute('src');video.style.display='none';image.src=x.url;image.style.display='block';}return;}video.pause();video.removeAttribute('src');video.style.display='none';image.style.display='none';text.textContent=x.text||x.body||x.title||'';ref.textContent=`${x.reference||x.title||''}${x.version?'  ·  '+x.version.toUpperCase():''}`;content.style.opacity='1';showContent();}
+api=window.scriptureAPI;api.onLiveDisplay(render);api.onLiveTheme(applyTheme);api.onLiveUpdate(x=>render({output:'live',live:x,transition}));api.onLiveClear(()=>render({output:'clear'}));setInterval(()=>{if(clock.style.display==='block')clock.textContent=new Date().toLocaleTimeString();},1000);window.addEventListener('keydown',e=>{if(e.key==='Escape')window.close();});
