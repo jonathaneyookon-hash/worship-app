@@ -5,32 +5,16 @@
   "main": "main.js",
   "author": "Jonathan",
   "license": "MIT",
-  "scripts": {
-    "start": "electron .",
-    "build-db": "node db/build-db.js",
-    "dist": "electron-builder",
-    "dist:win": "electron-builder --win"
-  },
-  "devDependencies": {
-    "electron": "^31.0.0",
-    "electron-builder": "^24.13.3"
-  },
-  "dependencies": {
-    "better-sqlite3": "^11.1.2",
-    "express": "^4.19.2",
-    "ws": "^8.18.0",
-    "cors": "^2.8.5",
-    "qrcode": "^1.5.4",
-    "grandiose": "^0.0.4"
-  },
+  "scripts": {"start":"electron .","build-db":"node db/build-db.js","dist":"electron-builder","dist:win":"electron-builder --win"},
+  "devDependencies": {"electron":"^31.0.0","electron-builder":"^24.13.3"},
+  "dependencies": {"better-sqlite3":"^11.1.2","express":"^4.19.2","ws":"^8.18.0","cors":"^2.8.5","qrcode":"^1.5.4"},
+  "optionalDependencies": {"grandiose":"^0.0.4"},
   "build": {
-    "appId": "com.jonathan.scripturepresenter",
-    "productName": "Scripture Presenter",
-    "asar": false,
-    "directories": { "output": "release" },
-    "files": ["main.js", "preload.js", "ndi.js", "state.js", "src/**/*", "server/**/*", "db/**/*", "!db/source-bible.db", "node_modules/**/*"],
-    "win": { "target": "nsis", "icon": "build/icon.ico" },
-    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true }
+    "appId":"com.jonathan.scripturepresenter","productName":"Scripture Presenter","asar":false,
+    "directories":{"output":"release"},
+    "files":["main.js","preload.js","ndi.js","state.js","src/**/*","server/**/*","db/**/*","!db/source-bible.db","node_modules/**/*"],
+    "win":{"target":"nsis","icon":"build/icon.ico"},
+    "nsis":{"oneClick":false,"allowToChangeInstallationDirectory":true}
   },
-  "keywords": ["worship", "bible", "scripture", "presentation", "ndi", "easyworship"]
+  "keywords":["worship","bible","scripture","presentation","ndi","easyworship"]
 }
