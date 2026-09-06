@@ -1,7 +1,7 @@
 {
   "name": "scripture-presenter",
-  "version": "1.0.0",
-  "description": "EasyWorship-style scripture presentation app with voice search and multi-version display",
+  "version": "1.1.0",
+  "description": "EasyWorship-style worship presentation app with scripture search, dual display, mobile remote and NDI output",
   "main": "main.js",
   "author": "Jonathan",
   "license": "MIT",
@@ -20,34 +20,20 @@
     "express": "^4.19.2",
     "ws": "^8.18.0",
     "cors": "^2.8.5",
-    "qrcode": "^1.5.4"
+    "qrcode": "^1.5.4",
+    "grandiose": "^0.1.1"
   },
   "build": {
     "appId": "com.jonathan.scripturepresenter",
     "productName": "Scripture Presenter",
     "asar": false,
-    "directories": {
-      "output": "release"
-    },
+    "directories": { "output": "release" },
     "files": [
-      "main.js",
-      "preload.js",
-      "ndi.js",
-      "state.js",
-      "src/**/*",
-      "server/**/*",
-      "db/**/*",
-      "!db/source-bible.db",
-      "node_modules/**/*"
+      "main.js", "preload.js", "ndi.js", "state.js",
+      "src/**/*", "server/**/*", "db/**/*", "!db/source-bible.db", "node_modules/**/*"
     ],
-    "win": {
-      "target": "nsis",
-      "icon": "build/icon.ico"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
-    }
+    "win": { "target": "nsis", "icon": "build/icon.ico" },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true }
   },
-  "keywords": []
+  "keywords": ["worship", "bible", "scripture", "presentation", "ndi", "easyworship"]
 }
