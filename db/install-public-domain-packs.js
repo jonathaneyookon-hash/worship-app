@@ -74,8 +74,6 @@ function normalise(value) {
 }
 
 const BOOK_ALIASES = new Map();
-// The source JSON contains a numeric bookId, so this alias table is only a
-// fallback for datasets where the numeric ID is absent.
 const BOOKS = require('./books');
 BOOKS.forEach(([abbr, name, ...aliases], index) => {
   [abbr, name, ...aliases].forEach(value => BOOK_ALIASES.set(normalise(value), index + 1));
@@ -118,11 +116,10 @@ function uniqueRows(rows) {
 }
 
 async function main() {
-  if (!fs.existsSync(DB)) {
-    console.error(`Missing ${DB}`);
-    process.exit(1);
-  }
-
+  // The source database is generated locally on demand. The old implementation
+  // expected a pre-existing source-bible.db, which made a clean GitHub Actions
+  // runner (and a fresh user install) fail before any Bible could be downloaded.
+  // Creating an empty SQLite database here makes the installer self-contained.
   const db = new Database(DB);
   try {
     for (const pack of PACKS) {
