@@ -145,13 +145,21 @@ async function main() {
         continue;
       }
 
-      db.exec(`CREATE TABLE ${table}(id INTEGER PRIMARY KEY,b INTEGER,c INTEGER,v INTEGER,t TEXT);`);
-      const insert = db.prepare(`INSERT INTO ${table}(id,b,c,v,t) VALUES(?,?,?,?,?)`);
-      db.transaction(items => items.forEach((row, index) => {
-        insert.run(index + 1, row.b, row.c, row.v, row.t);
-      }))(rows);
-
-      console.log(`Installed ${pack.name}: ${rows.length} verses.`);
+      // A single malformed/unexpected pack should never abort the whole run —
+      // earlier this crashed on hyphenated codes (e.g. "darby-fr") because the
+      // table name was interpolated unquoted into raw SQL, which silently
+      // starved every pack that came after it in the list.
+      try {
+        db.exec(`CREATE TABLE "${table}"(id INTEGER PRIMARY KEY,b INTEGER,c INTEGER,v INTEGER,t TEXT);`);
+        const insert = db.prepare(`INSERT INTO "${table}"(id,b,c,v,t) VALUES(?,?,?,?,?)`);
+        db.transaction(items => items.forEach((row, index) => {
+          insert.run(index + 1, row.b, row.c, row.v, row.t);
+        }))(rows);
+        console.log(`Installed ${pack.name}: ${rows.length} verses.`);
+      } catch (error) {
+        console.error(`Failed to store ${pack.code}: ${error.message}`);
+        try { db.exec(`DROP TABLE IF EXISTS "${table}";`); } catch (_) {}
+      }
     }
   } finally {
     db.close();

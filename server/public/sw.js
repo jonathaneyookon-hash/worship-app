@@ -1,5 +1,5 @@
-const CACHE_NAME = 'scripture-remote-shell-v2';
-const SHELL_FILES = ['/', '/remote.css?v=2', '/remote.js?v=2', '/manifest.json'];
+const CACHE_NAME = 'scripture-remote-shell-v3';
+const SHELL_FILES = ['/', '/remote.css?v=3', '/remote.js?v=3', '/manifest.json'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_FILES)));

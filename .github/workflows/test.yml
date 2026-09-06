@@ -12,8 +12,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
       - name: Install dependencies
-        run: npm install
+        run: npm ci
       - name: Check JavaScript syntax
         shell: bash
         run: |
@@ -33,9 +34,15 @@ jobs:
           const versions = search.listVersions();
           console.log(`Installed translations: ${versions.length}`);
           if (versions.length < 10) throw new Error(`Expected at least 10 translations, found ${versions.length}`);
-          const reference = search.search('John 3:16', versions[0].code);
-          if (!reference.results.length) throw new Error('John 3:16 reference search returned no results');
-          const phrase = search.search('beginning was the Word', versions[0].code);
-          if (!phrase.results.length) throw new Error('Phrase search returned no results');
-          console.log('Bible search verification passed.');
+          // Use a pinned, known-complete translation rather than versions[0] —
+          // some installed packs (e.g. the Aleppo Codex, Hebrew-only) are
+          // Old-Testament-only and sort before "kjv" alphabetically, so
+          // picking the "first" version arbitrarily is not a valid full-Bible
+          // fixture for these checks.
+          const fixtureCode = versions.some(v => v.code === 'kjv') ? 'kjv' : versions[0].code;
+          const reference = search.search('John 3:16', fixtureCode);
+          if (!reference.results.length) throw new Error(`John 3:16 reference search returned no results (version: ${fixtureCode})`);
+          const phrase = search.search('beginning was the Word', fixtureCode);
+          if (!phrase.results.length) throw new Error(`Phrase search returned no results (version: ${fixtureCode})`);
+          console.log(`Bible search verification passed (version: ${fixtureCode}).`);
           NODE
