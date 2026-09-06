@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('scriptureAPI', {
   listBooks: () => ipcRenderer.invoke('search:books'),
   getDbError: () => ipcRenderer.invoke('diagnostics:db-error'),
   getState: () => ipcRenderer.invoke('state:get'),
+  setVersion: (version) => ipcRenderer.invoke('state:set-version', version),
   addToSchedule: (item) => ipcRenderer.invoke('schedule:add', item),
   removeFromSchedule: (id) => ipcRenderer.invoke('schedule:remove', id),
   moveSchedule: (id, direction) => ipcRenderer.invoke('schedule:move', { id, direction }),
