@@ -1,46 +1,4 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-<title>Scripture Remote</title>
-<link rel="manifest" href="/manifest.json" />
-<meta name="theme-color" content="#10141c" />
-<link rel="icon" href="/icon-192.png" />
-<link rel="apple-touch-icon" href="/icon-192.png" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="Scripture" />
-<link rel="stylesheet" href="/remote.css?v=2" />
-</head>
-<body>
-  <div class="app">
-    <header class="header">
-      <div class="header-top"><span class="brand">SCRIPTURE REMOTE</span><span id="connDot" class="conn-dot"></span></div>
-      <div id="liveBanner" class="live-banner hidden"><span class="live-banner-label" id="outputLabel">LIVE</span><span id="liveBannerText"></span></div>
-    </header>
-    <div class="output-controls">
-      <button id="blackBtn" class="output-btn black">BLACK</button>
-      <button id="restoreBtn" class="output-btn">RESTORE</button>
-      <button id="clearBtn" class="output-btn">CLEAR</button>
-    </div>
-    <div class="search-bar">
-      <input id="searchInput" type="text" placeholder="Reference or phrase..." autocomplete="off" />
-      <button id="micBtn" class="mic-btn" aria-label="Voice search">🎙</button>
-    </div>
-    <div id="micStatus" class="mic-status"></div>
-    <div class="version-row">
-      <select id="versionSelect"></select>
-      <label class="checkbox-label"><input type="checkbox" id="multiVersionToggle" /> All versions</label>
-    </div>
-    <div id="resultsMeta" class="results-meta"></div>
-    <div id="results" class="results"></div>
-    <button id="scheduleToggle" class="schedule-toggle">Schedule (<span id="scheduleCount">0</span>) ▲</button>
-  </div>
-  <div id="scheduleSheet" class="schedule-sheet">
-    <div class="schedule-sheet-header"><span>SCHEDULE</span><button id="scheduleClose" class="sheet-close">▼</button></div>
-    <div id="scheduleList" class="schedule-list"></div>
-  </div>
-  <script src="/remote.js?v=2"></script>
-</body>
-</html>
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" /><title>Scripture Remote</title><link rel="manifest" href="/manifest.json" /><meta name="theme-color" content="#10141c" /><link rel="icon" href="/icon-192.png" /><link rel="apple-touch-icon" href="/icon-192.png" /><meta name="apple-mobile-web-app-capable" content="yes" /><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" /><meta name="apple-mobile-web-app-title" content="Scripture" /><link rel="stylesheet" href="/remote.css?v=2" /></head>
+<body><div class="app"><header class="header"><div class="header-top"><span class="brand">SCRIPTURE REMOTE</span><span id="connDot" class="conn-dot"></span></div><div id="liveBanner" class="live-banner hidden"><span class="live-banner-label" id="outputLabel">LIVE</span><span id="liveBannerText"></span></div></header><div class="output-controls"><button id="blackBtn" class="output-btn black">BLACK</button><button id="restoreBtn" class="output-btn">RESTORE</button><button id="clearBtn" class="output-btn">CLEAR</button></div><div class="search-bar"><input id="searchInput" type="text" placeholder="Reference or phrase..." autocomplete="off" /><button id="micBtn" class="mic-btn" aria-label="Voice search">🎙</button></div><div id="micStatus" class="mic-status"></div><div class="version-row"><select id="versionSelect"></select><label class="checkbox-label"><input type="checkbox" id="multiVersionToggle" /> Search all versions</label></div><div id="resultsMeta" class="results-meta"></div><div id="results" class="results"></div><button id="scheduleToggle" class="schedule-toggle">Schedule (<span id="scheduleCount">0</span>) ▲</button></div><div id="scheduleSheet" class="schedule-sheet"><div class="schedule-sheet-header"><span>SCHEDULE</span><button id="scheduleClose" class="sheet-close">▼</button></div><div id="scheduleList" class="schedule-list"></div></div><script src="/remote.js?v=2"></script></body></html>
