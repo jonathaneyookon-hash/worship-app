@@ -8,9 +8,10 @@ Scripture Presenter is a free, Windows-focused worship presentation system inspi
 - Offline SQLite Bible search
 - Reference and phrase search
 - Book autocomplete
-- Search across installed translations
+- Search across every translation installed in the local database
 - Global single-translation model: changing the selected translation automatically re-resolves the current Live, Preview and scheduled Scriptures
-- Public-domain/free translation pack installer
+- Automatic Bible pack downloader from an open/public-domain machine-readable Bible dataset
+- 33 downloadable Bible versions across 22 languages are configured by the installer
 - Voice search
 
 ### Presentation
@@ -60,7 +61,17 @@ Scripture Presenter is a free, Windows-focused worship presentation system inspi
 - Runtime status and graceful fallback when NDI is unavailable
 
 ## Bible packs
-The repository does not bundle copyrighted translations without permission. Use `npm run install-bible-packs` to download supported public-domain/free packs, then `npm run build-db` to rebuild the local database.
+Run the installer once while connected to the internet:
+
+```bash
+npm install
+npm run install-bible-packs
+npm run build-db
+```
+
+The installer downloads open/public-domain Bible data into `db/source-bible.db`. The database builder automatically discovers the downloaded `t_*` translation tables, imports them into the searchable SQLite database and rebuilds the FTS5 search index. No application-code change is required when a supported pack is added.
+
+The configured dataset includes English, Arabic, Chinese, Czech, Danish, Dutch, Esperanto, French, German, Greek, Hebrew, Hungarian, Italian, Latin, Norwegian, Polish, Portuguese, Romanian, Russian, Swedish, Ukrainian and Vietnamese versions.
 
 ## Development
 
