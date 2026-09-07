@@ -1,0 +1,8 @@
+{
+  "appId": "com.jonathan.scripturepresenter.remote",
+  "appName": "Scripture Remote",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}

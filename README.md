@@ -54,6 +54,10 @@ Scripture Presenter is a free, Windows-focused worship presentation system inspi
 - Black/Clear/Restore
 - Transition and stage-mode controls
 - Voice search
+- Songs, presentation slides, and theme quick-select
+- A native mobile app (`mobile-app/`) with the same controls, QR/manual
+  pairing, a saved-connections list, and a forced-landscape control layout —
+  see [`mobile-app/README.md`](mobile-app/README.md)
 
 ### NDI
 - Optional NDI sender integration
