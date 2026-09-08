@@ -2,4 +2,5 @@ node_modules/
 release/
 db/bible.db
 db/source-bible.db
+server/services/
 *.log
