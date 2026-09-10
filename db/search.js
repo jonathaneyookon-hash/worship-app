@@ -121,9 +121,43 @@ function phraseSearch(query, version, limit = 20) {
   return results;
 }
 
+/** Fetch every verse in a chapter, plus how many chapters this book has
+ *  in this version -- used to drive the full scrollable book/chapter
+ *  browser (Genesis 1 through Revelation, like EasyWorship's Scripture
+ *  library) rather than only ever showing single search hits.
+ *  Pass chapter <= 0 (or the string 'last') to resolve to that book's
+ *  final chapter -- used when stepping backward from another book's
+ *  chapter 1, where the caller doesn't know the previous book's chapter
+ *  count in advance. */
+function getChapter(bookId, chapter, version) {
+  const database = getDb();
+  const maxChapter = getMaxChapter(bookId, version);
+  const resolvedChapter = (!chapter || chapter === 'last' || chapter > maxChapter) ? maxChapter : chapter;
+  const verses = database.prepare(`
+    SELECT book_name, chapter, verse, text FROM verses
+    WHERE version = ? AND book_id = ? AND chapter = ?
+    ORDER BY verse
+  `).all(version, bookId, resolvedChapter);
+  return { bookId, chapter: resolvedChapter, maxChapter, bookName: verses[0]?.book_name, verses };
+}
+
+/** Highest chapter number this book actually has installed for this version. */
+function getMaxChapter(bookId, version) {
+  const database = getDb();
+  const row = database.prepare(`
+    SELECT MAX(chapter) as maxChapter FROM verses WHERE version = ? AND book_id = ?
+  `).get(version, bookId);
+  return row?.maxChapter || 1;
+}
+
+function listBooks() {
+  return BOOKS.map(([, name], idx) => ({ bookId: idx + 1, name }));
+}
+
 function listVersions() {
   return getDb().prepare('SELECT code, name FROM versions').all();
 }
+
 
 /**
  * Main entry point used by the app: given raw voice/typed input, decide
@@ -137,4 +171,4 @@ function search(rawInput, version) {
   return { type: 'phrase', results: phraseSearch(rawInput, version) };
 }
 
-module.exports = { parseReference, getByReference, getByReferenceAllVersions, phraseSearch, listVersions, search };
+module.exports = { parseReference, getByReference, getByReferenceAllVersions, phraseSearch, listVersions, search, getChapter, getMaxChapter, listBooks };

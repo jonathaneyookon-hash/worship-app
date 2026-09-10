@@ -13,6 +13,12 @@ Scripture Presenter is a free, Windows-focused worship presentation system inspi
 - Automatic Bible pack downloader from an open/public-domain machine-readable Bible dataset
 - 33 downloadable Bible versions across 22 languages are configured by the installer
 - Voice search
+- Full scrollable Bible browser (EasyWorship-style): a persistent Book +
+  Chapter view covering Genesis 1 through Revelation's last chapter, with
+  Prev/Next chapter navigation that rolls across book boundaries. Typing a
+  direct reference (e.g. "John 3:16") jumps the browser to that whole
+  chapter with the verse highlighted, rather than only showing the single
+  isolated verse.
 
 ### Presentation
 - Preview and Live panes
